@@ -1,6 +1,6 @@
 /* Exact finite-state counting and rank/select over an implicit A–Z catalogue. */
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-export const DEFAULTS = {lengths:[3,4,5,6,7,8,9,10,11,12], allowed:ALPHABET, vowels:'AEIOU', blocked:'', maxC:null, maxV:null, maxSame:null, prefix:'', suffix:'', contains:'', excluded:[], bannedSuffixes:[], stops:[], minV:0,maxVowels:12,pattern:'', noInnerY:false,required:[],requiredMode:'all',prefixes:[],suffixes:[],bannedPrefixes:[],positionRules:[],warningSuffixes:[]};
+export const DEFAULTS = {lengths:[3,4,5,6,7,8,9,10,11,12], allowed:ALPHABET, vowels:'AEIOU', blocked:'', maxC:null, maxV:null, maxSame:null, prefix:'', suffix:'', contains:'', excluded:[], bannedSuffixes:[], stops:[], minV:0,maxVowels:12,pattern:'', patterns:[], noInnerY:false,required:[],requiredMode:'all',prefixes:[],suffixes:[],bannedPrefixes:[],positionRules:[],warningSuffixes:[]};
 const latin = (s, label) => {s=String(s??'').trim().toUpperCase();if(!/^[A-Z]*$/.test(s))throw Error(`${label}: допустимы только A–Z`);return s;};
 export function normalize(raw={}) {
   const c={...DEFAULTS,...raw};
@@ -18,6 +18,9 @@ export function normalize(raw={}) {
   if(!Array.isArray(c.positionRules))throw Error('Правила позиций: нужен список');
   c.positionRules=c.positionRules.map(rule=>{const position=Number(rule.position);if(!Number.isInteger(position)||position===0||Math.abs(position)>12)throw Error('Позиция: 1–12 от начала или −1…−12 от конца');return {position,allowed:latin(rule.allowed,'Буквы в позиции'),blocked:latin(rule.blocked,'Запрет в позиции')};});
   c.pattern=String(c.pattern||'').trim().toUpperCase();if(!/^[CV?]*$/.test(c.pattern))throw Error('Шаблон: C, V и ?');
+  if(!Array.isArray(c.patterns))throw Error('Набор масок: нужен список');
+  c.patterns=[...new Set(c.patterns.map(s=>String(s).trim().toUpperCase()).filter(Boolean))].sort();
+  if(c.patterns.some(s=>!/^([CV]){1,12}$/.test(s)))throw Error('Каждая маска набора: только C/V, длина 1–12');
   c.noInnerY=Boolean(c.noInnerY);
   return c;
 }
@@ -49,11 +52,12 @@ export class Catalogue {
   constructor(raw={}) {
     this.config=normalize(raw);this.signature=JSON.stringify(this.config);this.ac=automaton(this.config);this.trie=stopTrie(this.config.stops);this.stopSet=new Set(this.config.stops);
     this.prefixTrie=prefixTrie(this.config);this.requiredMask=(1<<this.config.required.length)-1;
+    this.patternTrie=stopTrie(this.config.patterns);
     this.letters=[...this.config.allowed].filter(ch=>!this.config.blocked.includes(ch));this.vowels=new Set(this.config.vowels);this.memo=new Map();this.counts=new Map();this.states=0;
   }
-  initial(){return [0,0,0,0,0,'',0,!this.config.contains,0,0,0,!this.config.prefixes.length];}
+  initial(){return [0,0,0,0,0,'',0,!this.config.contains,0,0,0,!this.config.prefixes.length,this.config.patterns.length?0:-1];}
   next(state,ch,n){
-    const c=this.config,[depth,ac,cr,vr,same,last,nv,found,stop,mask,prefixState,prefixFound]=state;
+    const c=this.config,[depth,ac,cr,vr,same,last,nv,found,stop,mask,prefixState,prefixFound,cvState]=state;
     if(c.prefix[depth]&&c.prefix[depth]!==ch)return null;
     if(c.noInnerY&&ch==='Y'&&depth<n-1)return null;
     for(const rule of c.positionRules)if(rule.position===depth+1||rule.position===depth-n){if(rule.allowed&&!rule.allowed.includes(ch)||rule.blocked.includes(ch))return null;}
@@ -63,23 +67,25 @@ export class Catalogue {
     if(!pFound&&pNode<0)return null;
     const v=this.vowels.has(ch),p=c.pattern[depth];
     if(p&&p!=='?'&&p!==(v?'V':'C'))return null;
+    const cvNext=cvState<0?-1:(this.patternTrie[cvState].next[v?'V':'C']??-1);
+    if(cvState>=0&&cvNext<0)return null;
     const cRun=v?0:cr+1,vRun=v?vr+1:0,sRun=ch===last?same+1:1,vCount=nv+Number(v);
     if(c.maxC!==null&&cRun>c.maxC||c.maxV!==null&&vRun>c.maxV||c.maxSame!==null&&sRun>c.maxSame||vCount>c.maxVowels||vCount+n-depth-1<c.minV)return null;
     const a=this.ac[ac].next[ch];if(this.ac[a].bad)return null;
     // Collapse unused dimensions; otherwise even an unrestricted catalogue
     // would unnecessarily create distinct states for every last letter/run.
-    return [depth+1,a,c.maxC===null?0:cRun,c.maxV===null?0:vRun,c.maxSame===null?0:sRun,c.maxSame===null?'':ch,(c.minV===0&&c.maxVowels>=n)?0:vCount,found||this.ac[a].found,stop<0?-1:(this.trie[stop].next[ch]??-1),mask|this.ac[a].mask,pNode,pFound];
+    return [depth+1,a,c.maxC===null?0:cRun,c.maxV===null?0:vRun,c.maxSame===null?0:sRun,c.maxSame===null?'':ch,(c.minV===0&&c.maxVowels>=n)?0:vCount,found||this.ac[a].found,stop<0?-1:(this.trie[stop].next[ch]??-1),mask|this.ac[a].mask,pNode,pFound,cvNext];
   }
   countState(n,state){
-    const c=this.config,[depth,a,,,,,nv,found,stop,mask,,prefixFound]=state;
+    const c=this.config,[depth,a,,,,,nv,found,stop,mask,,prefixFound,cvState]=state;
     const requiredOK=!this.requiredMask||(c.requiredMode==='all'?mask===this.requiredMask:mask!==0);
-    if(depth===n)return BigInt(found&&this.ac[a].ending&&this.ac[a].anyEnd&&!this.ac[a].badEnd&&requiredOK&&prefixFound&&nv>=c.minV&&nv<=c.maxVowels&&!(stop>=0&&this.trie[stop].end));
+    if(depth===n)return BigInt(found&&this.ac[a].ending&&this.ac[a].anyEnd&&!this.ac[a].badEnd&&requiredOK&&prefixFound&&(!c.patterns.length||cvState>=0&&this.patternTrie[cvState].end)&&nv>=c.minV&&nv<=c.maxVowels&&!(stop>=0&&this.trie[stop].end));
     const key=n+'|'+state.join(':');const cached=this.memo.get(key);if(cached!==undefined)return cached;
     let total=0n;for(const ch of this.letters){const s=this.next(state,ch,n);if(s)total+=this.countState(n,s);}
     this.memo.set(key,total);this.states++;if(this.states>2000000)throw Error('Слишком сложный набор правил: более 2 млн состояний. Упростите правила или разделите расчёт по длинам.');
     return total;
   }
-  countLength(n){if(!this.counts.has(n)){const c=this.config;this.counts.set(n,(c.prefix.length>n||c.suffix.length>n||c.contains.length>n||c.pattern&&c.pattern.length!==n||c.positionRules.some(rule=>Math.abs(rule.position)>n))?0n:this.countState(n,this.initial()));}return this.counts.get(n);}
+  countLength(n){if(!this.counts.has(n)){const c=this.config;this.counts.set(n,(c.prefix.length>n||c.suffix.length>n||c.contains.length>n||c.pattern&&c.pattern.length!==n||c.patterns.length&&!c.patterns.some(mask=>mask.length===n)||c.positionRules.some(rule=>Math.abs(rule.position)>n))?0n:this.countState(n,this.initial()));}return this.counts.get(n);}
   total(){let t=0n;for(const n of this.config.lengths)t+=this.countLength(n);return t;}
   select(ordinal){
     ordinal=BigInt(ordinal);if(ordinal<0n)throw Error('Позиция должна быть неотрицательной');

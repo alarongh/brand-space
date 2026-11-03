@@ -1,5 +1,5 @@
-import {DEFAULTS,normalize,features} from './engine.js?v=3';
-import {restoreSettings} from './settings.js?v=3';
+import {DEFAULTS,normalize,features} from './engine.js?v=5';
+import {restoreSettings} from './settings.js?v=5';
 const $=id=>document.getElementById(id),number=s=>BigInt(s).toLocaleString('ru-RU'),split=s=>s.toUpperCase().split(/[\s,;]+/).filter(Boolean);
 const STORAGE='brand-space-v2';
 let stored=null,legacy=null;try{stored=localStorage.getItem(STORAGE);legacy=localStorage.getItem('brand-space-v1');}catch{}
@@ -7,7 +7,7 @@ const settings=restoreSettings(stored,legacy);
 let favorites=settings.favorites,active=settings.config,page=null,worker=null,serial=0,pending=new Map(),exporting=false,exportCancelled=false;
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify({schema:2,config:active,favorites,legacyConfig:settings.legacyConfig}));}catch{message('Браузер не сохранил настройки. Скачайте копию избранного.',true);}}
 function message(text,error=false){$('status').textContent=text;$('status').className=error?'error':'';}
-function spawn(){if(worker)worker.terminate();for(const {reject} of pending.values())reject(Error('Расчёт остановлен'));pending.clear();worker=new Worker(new URL('./worker.js?v=3',import.meta.url),{type:'module'});worker.onmessage=({data:m})=>{const p=pending.get(m.id);if(!p)return;pending.delete(m.id);if(m.error)p.reject(Error(m.error));else p.resolve(m);};worker.onerror=e=>{message('Ошибка вычислителя: '+e.message,true);for(const {reject} of pending.values())reject(Error(e.message));pending.clear();};}
+function spawn(){if(worker)worker.terminate();for(const {reject} of pending.values())reject(Error('Расчёт остановлен'));pending.clear();worker=new Worker(new URL('./worker.js?v=5',import.meta.url),{type:'module'});worker.onmessage=({data:m})=>{const p=pending.get(m.id);if(!p)return;pending.delete(m.id);if(m.error)p.reject(Error(m.error));else p.resolve(m);};worker.onerror=e=>{message('Ошибка вычислителя: '+e.message,true);for(const {reject} of pending.values())reject(Error(e.message));pending.clear();};}
 function request(type,data={}){return new Promise((resolve,reject)=>{const id=++serial;pending.set(id,{resolve,reject});worker.postMessage({id,type,...data});});}
 let positionSerial=0;
 function addPosition(rule={position:1,allowed:'',blocked:''}){
@@ -25,7 +25,7 @@ function addPosition(rule={position:1,allowed:'',blocked:''}){
 function formConfig(){
   const c={lengths:[...$('length-choices').querySelectorAll('input:checked')].map(el=>Number(el.value))};
   for(const key of ['allowed','vowels','blocked','prefix','contains','suffix','pattern','maxC','maxV','maxSame','minV','maxVowels','requiredMode'])c[key]=$(key).value;
-  for(const [key,id] of [['excluded','excluded'],['bannedSuffixes','banned-suffixes'],['stops','stops'],['required','required'],['prefixes','prefixes'],['suffixes','suffixes'],['bannedPrefixes','banned-prefixes'],['warningSuffixes','warning-suffixes']])c[key]=split($(id).value);
+  for(const [key,id] of [['patterns','patterns'],['excluded','excluded'],['bannedSuffixes','banned-suffixes'],['stops','stops'],['required','required'],['prefixes','prefixes'],['suffixes','suffixes'],['bannedPrefixes','banned-prefixes'],['warningSuffixes','warning-suffixes']])c[key]=split($(id).value);
   c.positionRules=[...$('position-rules').children].map(row=>Object.fromEntries([...row.querySelectorAll('input')].map(el=>[el.dataset.key,el.value]))).filter(rule=>rule.allowed.trim()||rule.blocked.trim());
   c.noInnerY=$('noInnerY').checked;return normalize(c);
 }
@@ -33,15 +33,15 @@ function setForm(c){
   for(const input of $('length-choices').querySelectorAll('input'))input.checked=c.lengths.includes(Number(input.value));
   $('length-caption').textContent='Выбраны длины: '+c.lengths.join(', ');
   for(const key of ['allowed','vowels','blocked','prefix','contains','suffix','pattern','maxC','maxV','maxSame','minV','maxVowels','requiredMode'])$(key).value=c[key]??'';
-  for(const [key,id] of [['excluded','excluded'],['bannedSuffixes','banned-suffixes'],['stops','stops'],['required','required'],['prefixes','prefixes'],['suffixes','suffixes'],['bannedPrefixes','banned-prefixes'],['warningSuffixes','warning-suffixes']])$(id).value=c[key].join(key==='stops'?'\n':', ');
+  for(const [key,id] of [['patterns','patterns'],['excluded','excluded'],['bannedSuffixes','banned-suffixes'],['stops','stops'],['required','required'],['prefixes','prefixes'],['suffixes','suffixes'],['bannedPrefixes','banned-prefixes'],['warningSuffixes','warning-suffixes']])$(id).value=c[key].join(key==='stops'?'\n':', ');
   $('position-rules').replaceChildren();c.positionRules.forEach(addPosition);$('noInnerY').checked=c.noInnerY;
 }
 function markDraft(){$('draft-note').textContent='Изменения ещё не применены. Нажмите «Применить правила». ';}
 function tags(){
-  const c=active,t=[];if(c.blocked)t.push('Без '+c.blocked);if(c.allowed!==DEFAULTS.allowed)t.push('Алфавит '+c.allowed);
+  const c=active,t=[];if(c.blocked)t.push('Без '+c.blocked);if(c.vowels!==DEFAULTS.vowels)t.push('Гласные '+c.vowels);if(c.allowed!==DEFAULTS.allowed)t.push('Алфавит '+c.allowed);
   for(const [key,label] of [['maxC','Согласных подряд'],['maxV','Гласных подряд'],['maxSame','Одинаковых подряд']])if(c[key]!==null)t.push(label+' ≤ '+c[key]);
   for(const [key,label] of [['prefix','Начало'],['contains','Содержит'],['suffix','Конец'],['pattern','Шаблон']])if(c[key])t.push(label+' '+c[key]);
-  for(const [key,label] of [['excluded','Запрет сочетаний'],['bannedSuffixes','Запрет окончаний'],['bannedPrefixes','Запрет начал'],['prefixes','Допустимые начала'],['suffixes','Допустимые окончания'],['stops','Точные исключения']])if(c[key].length)t.push(label+': '+c[key].join(', '));
+  for(const [key,label] of [['patterns','Маски C/V'],['excluded','Запрет сочетаний'],['bannedSuffixes','Запрет окончаний'],['bannedPrefixes','Запрет начал'],['prefixes','Допустимые начала'],['suffixes','Допустимые окончания'],['stops','Точные исключения']])if(c[key].length)t.push(label+': '+c[key].join(', '));
   if(c.required.length)t.push((c.requiredMode==='all'?'Содержит все: ':'Содержит любое: ')+c.required.join(', '));
   for(const r of c.positionRules)t.push('Позиция '+r.position+(r.allowed?' / можно '+r.allowed:'')+(r.blocked?' / нельзя '+r.blocked:''));
   if(c.minV||c.maxVowels<12)t.push(`Гласных ${c.minV}–${c.maxVowels}`);if(c.noInnerY)t.push('Y только в конце');
@@ -75,7 +75,7 @@ async function exportData(directoryMode){if(exporting)return;let ew,writable=nul
   if(!page)throw Error('Сначала примените правила');const config=structuredClone(active),total=BigInt(page.total),partSize=Number($('split').value);let at=BigInt($('export-start').value.replace(/\s/g,''))-1n;if(at<0n||at>=total)throw Error('Начальная позиция вне выборки');if(!Number.isInteger(partSize)||partSize<1||partSize>1000000)throw Error('Размер части: 1–1 000 000');
   let directory;if(directoryMode){if(!window.showDirectoryPicker)throw Error('Этот браузер не поддерживает запись в папку. Используйте «Скачать часть CSV» и продолжайте с сохранённой позиции.');directory=await window.showDirectoryPicker({mode:'readwrite'});}
   exporting=true;exportCancelled=false;$('export-stop').hidden=false;$('export-directory').disabled=$('export-part').disabled=true;
-  ew=new Worker(new URL('./worker.js?v=3',import.meta.url),{type:'module'});let eid=0;
+  ew=new Worker(new URL('./worker.js?v=5',import.meta.url),{type:'module'});let eid=0;
   const ask=(type,data)=>new Promise((resolve,reject)=>{ew.onmessage=({data:m})=>m.error?reject(Error(m.error)):resolve(m.result);ew.onerror=e=>reject(Error(e.message));ew.postMessage({id:++eid,type,...data});});
   await ask('init',{config,limit:1});
   do {const start=at,end=at+BigInt(partSize)<total?at+BigInt(partSize):total;const filename=`names_${start+1n}-${end}.csv`;let chunks=['\ufeff'+csvHeader];
@@ -100,3 +100,24 @@ $('download-legacy').onclick=()=>download('brand-space-previous-rules.json',JSON
 setForm(active);updateFavorites();apply(active);
 
 addEventListener('resize',()=>{if(innerWidth>720)$('filter-panel').open=true;});
+
+let companyMounted=false;
+$('company-lab').addEventListener('toggle',async()=>{
+  if(!$('company-lab').open||companyMounted)return;
+  companyMounted=true;
+  try{
+    const {mountCompanies}=await import('./companies-ui.js?v=5');
+    await mountCompanies($('company-analysis'),({kind,values,vowels,adjustRange})=>{
+      const field=$(kind);const previous=split(field.value);
+      field.value=[...new Set([...previous,...values])].join(', ');
+      if(kind==='patterns'&&adjustRange){
+        $('vowels').value=vowels;
+        const lengths=new Set(split(field.value).map(mask=>mask.length));
+        for(const input of $('length-choices').querySelectorAll('input'))input.checked=lengths.has(Number(input.value));
+        $('length-caption').textContent='Выбраны длины: '+[...lengths].sort((a,b)=>a-b).join(', ');
+      }
+      if(kind==='required'&&!previous.length)$('requiredMode').value='any';
+      markDraft();message('Условия из анализа перенесены в настройки. Нажмите «Применить правила».');
+    });
+  }catch(e){$('company-analysis').textContent='Не удалось открыть анализ: '+e.message;companyMounted=false;}
+});

@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "checks": [
+    "frozen_dataset_loaded",
+    "source_scope_and_denominators_visible",
+    "single_mixed_denominator_318",
+    "top_mask_19_of_318",
+    "no_search_change_before_apply",
+    "single_mask_4862025",
+    "mask_union_106964550",
+    "last_union_name_ZUZZUZZ",
+    "suffix_intersection_46305",
+    "small_csv_full_export",
+    "mobile_no_horizontal_overflow",
+    "no_console_errors"
+  ],
+  "csv_names": [
+    "BABBAB",
+    "BABBABB"
+  ]
+}
