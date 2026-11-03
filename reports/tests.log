@@ -1,0 +1,18 @@
+✔ full unfiltered 4–6 universe is exactly 321254128; rejected legacy names remain (4.5559ms)
+✔ legacy configuration independently gives every known per-length count (8.5124ms)
+✔ unfiltered lengths 1–12 preserve integer precision and support last-page seek (2.2961ms)
+✔ exhaustive small universes, overlapping automaton patterns, all hard rules (203.5562ms)
+✔ exact dictionary does not exclude longer words containing its entries (0.6203ms)
+✔ redundant X endings and identical triples do not double count exclusions (7.9068ms)
+✔ seek absent and excluded words returns exact insertion position (0.4131ms)
+✔ stable raw IDs agree with independent base-26 encoding (0.2237ms)
+✔ annotations never discard names; Y and warning endings remain (0.4335ms)
+✔ invalid configs and page positions fail clearly (0.5573ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 312.2722
