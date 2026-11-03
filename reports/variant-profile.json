@@ -1,0 +1,98 @@
+{
+  "measuredAt": "2026-11-03T18:20:45.693Z",
+  "runtime": "v24.19.0",
+  "platform": "win32",
+  "scope": "One local run. Timing is illustrative, not a guarantee for every device or configuration.",
+  "results": [
+    {
+      "config": {
+        "lengths": [
+          12
+        ]
+      },
+      "total": "95428956661682176",
+      "memoizedStates": 12,
+      "countMs": 5.218,
+      "lastSelectMs": 2.035,
+      "last": "ZZZZZZZZZZZZ"
+    },
+    {
+      "config": {
+        "lengths": [
+          12
+        ],
+        "maxOccurrences": 1
+      },
+      "total": "4626053752320000",
+      "memoizedStates": 57,
+      "countMs": 10.943,
+      "lastSelectMs": 1.747,
+      "last": "ZYXWVUTSRQPO"
+    },
+    {
+      "config": {
+        "lengths": [
+          12
+        ],
+        "maxOccurrences": 2
+      },
+      "total": "72801827198100000",
+      "memoizedStates": 368,
+      "countMs": 48.473,
+      "lastSelectMs": 1.749,
+      "last": "ZZYYXXWWVVUU"
+    },
+    {
+      "config": {
+        "lengths": [
+          12
+        ],
+        "minRepeatGap": 2
+      },
+      "total": "41212197627494400",
+      "memoizedStates": 43,
+      "countMs": 12.905,
+      "lastSelectMs": 2.038,
+      "last": "ZYXZYXZYXZYX"
+    },
+    {
+      "config": {
+        "lengths": [
+          6
+        ],
+        "patterns": [
+          "CVCCVC"
+        ],
+        "letterMasks": [
+          "?A??A?"
+        ],
+        "maxOccurrences": 2,
+        "minRepeatGap": 2,
+        "allowedConsonantPairs": [
+          "BL",
+          "BT",
+          "CC",
+          "FR",
+          "LM",
+          "NK",
+          "NM",
+          "NT",
+          "PS",
+          "RG",
+          "RM",
+          "RP",
+          "RT",
+          "SD",
+          "SM",
+          "XC",
+          "YP"
+        ]
+      },
+      "total": "6400",
+      "memoizedStates": 829,
+      "countMs": 35.953,
+      "lastSelectMs": 0.744,
+      "last": "ZAYPAZ"
+    }
+  ]
+}

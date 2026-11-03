@@ -3,6 +3,13 @@ import assert from 'node:assert/strict';
 import {Catalogue,DEFAULTS,rawId,normalize} from '../engine.js';
 const BASELINE_RULES={blocked:'QWXJ',maxC:2,maxV:2,maxSame:2};
 function brute(c){const out=[];const vowels=new Set(c.vowels);function valid(w){
+const counts={},positions={};for(let i=0;i<w.length;i++){counts[w[i]]=(counts[w[i]]||0)+1;(positions[w[i]]??=[]).push(i);}
+if(c.maxOccurrences!==null&&Object.values(counts).some(n=>n>c.maxOccurrences)||Object.keys(counts).length<c.minDistinct||c.maxDistinct!==null&&Object.keys(counts).length>c.maxDistinct)return false;
+const gapOK=(ps,lo,hi)=>ps.every((p,i)=>i===0||(lo===null||p-ps[i-1]-1>=lo)&&(hi===null||p-ps[i-1]-1<=hi));
+if(Object.values(positions).some(ps=>!gapOK(ps,c.minRepeatGap,c.maxRepeatGap)))return false;
+for(const r of c.letterRules){const n=counts[r.letter]||0;if(n<r.min||r.max!==null&&n>r.max||!gapOK(positions[r.letter]||[],r.minGap,r.maxGap))return false;}
+if(c.letterMasks.length&&!c.letterMasks.some(m=>m.length===w.length&&[...m].every((x,i)=>x==='?'||x===w[i])))return false;
+for(let i=1;i<w.length;i++){const pair=w.slice(i-1,i+1),vs=[...pair].map(x=>vowels.has(x));if(vs.every(Boolean)&&c.allowedVowelPairs.length&&!c.allowedVowelPairs.includes(pair)||vs.every(x=>!x)&&c.allowedConsonantPairs.length&&!c.allowedConsonantPairs.includes(pair))return false;}
 if(c.prefixes.length&&!c.prefixes.some(s=>w.startsWith(s))||c.suffixes.length&&!c.suffixes.some(s=>w.endsWith(s))||c.bannedPrefixes.some(s=>w.startsWith(s)))return false;
 if(c.required.length&&!(c.requiredMode==='all'?c.required.every(s=>w.includes(s)):c.required.some(s=>w.includes(s))))return false;
 for(const r of c.positionRules){if(Math.abs(r.position)>w.length)return false;const ch=w[r.position>0?r.position-1:w.length+r.position];if(r.allowed&&!r.allowed.includes(ch)||r.blocked.includes(ch))return false;}
@@ -43,3 +50,27 @@ const masks=[];for(let n=1;n<=5;n++)for(let bits=0;bits<2**n;bits++)masks.push(A
 const all=new Catalogue({lengths:[1,2,3,4,5],patterns:masks});assert.equal(all.total(),[1,2,3,4,5].reduce((s,n)=>s+26n**BigInt(n),0n));
 assert.throws(()=>normalize({patterns:['CV?']}));assert.throws(()=>normalize({patterns:'CVC'}));
 });
+
+test('total occurrences, consecutive-repeat gaps, distinct counts and per-letter rules match independent enumeration',()=>{
+ const base={allowed:'ABCE',vowels:'AE',lengths:[1,2,3,4,5]};
+ const cases=[{maxOccurrences:0},{maxOccurrences:1},{maxOccurrences:2},{minRepeatGap:0},{minRepeatGap:1},{minRepeatGap:2},{minRepeatGap:11},{maxRepeatGap:0},{maxRepeatGap:1},{minRepeatGap:2,maxRepeatGap:1},{minRepeatGap:1,maxRepeatGap:2},{minDistinct:3},{maxDistinct:2},{minDistinct:2,maxDistinct:2},{maxDistinct:0},{maxOccurrences:2,maxSame:1,minRepeatGap:1},{letterRules:[{letter:'A',min:2,max:3,minGap:1,maxGap:2}]},{letterRules:[{letter:'A',max:0},{letter:'C',min:1}]},{letterRules:[{letter:'B',min:2},{letter:'B',max:2}]},{maxOccurrences:2,letterRules:[{letter:'A',min:1}],maxRepeatGap:2}];
+ for(const cfg of cases)compare({...base,...cfg});
+});
+test('repeat memoization preserves literal identity under every other hard rule',()=>{
+ const base={allowed:'ABCE',vowels:'AE',lengths:[3,4,5],maxOccurrences:2,minRepeatGap:1};
+ for(const cfg of [{prefix:'B'},{suffix:'A'},{contains:'BE'},{excluded:['AB','EE']},{required:['BA','E'],requiredMode:'any'},{prefixes:['AB','CE'],suffixes:['A','B']},{stops:['ABC','BCA','EBCE']},{letterMasks:['A??','?B??','??A??']},{positionRules:[{position:2,allowed:'AB',blocked:'B'}]},{patterns:['CVC','VCVC','CVCCV']},{maxSame:1},{allowedConsonantPairs:['BC'],allowedVowelPairs:['AE','EA']},{noInnerY:true,allowed:'ABEY'}])compare({...base,...cfg});
+});
+test('overlapping literal wildcard masks form a deduplicated union, independent of C/V masks',()=>{
+ const base={allowed:'ABCE',lengths:[1,2,3,4],vowels:'AE'};
+ for(const cfg of [{letterMasks:['A??','?B?','???','AB?']},{letterMasks:['A?','?B','ABC?'],patterns:['VC','CV','VCCC']},{letterMasks:['??A?','A???'],maxOccurrences:2,maxRepeatGap:1}])compare({...base,...cfg});
+ for(const cfg of [{allowedVowelPairs:['AE']},{allowedConsonantPairs:['BC','CC']},{allowedVowelPairs:['AE'],allowedConsonantPairs:['BC'],maxSame:1}])compare({...base,...cfg});
+});
+test('A–Z length 12 with no repeated letters equals the falling factorial and remains seekable',()=>{
+ const c=new Catalogue({lengths:[12],maxOccurrences:1});let expected=1n;for(let n=26;n>14;n--)expected*=BigInt(n);assert.equal(c.total(),expected);assert.equal(c.select(0).name,'ABCDEFGHIJKL');assert.equal(c.select(expected-1n).name,'ZYXWVUTSRQPO');assert(c.states<10000);
+});
+test('large occurrence and spacing counts agree with independent combinatorial formulas',()=>{
+ const factorial=n=>{let p=1n;for(let i=2;i<=n;i++)p*=BigInt(i);return p;};const choose=(n,k)=>factorial(n)/(factorial(k)*factorial(n-k));
+ let expected=0n;for(let pairs=0;pairs<=6;pairs++)expected+=choose(26,pairs)*choose(26-pairs,12-2*pairs)*factorial(12)/(2n**BigInt(pairs));
+ const c=new Catalogue({lengths:[12],maxOccurrences:2});assert.equal(c.total(),expected);assert(c.states<10000);assert.equal(new Catalogue({lengths:[12],minRepeatGap:2}).total(),26n*25n*24n**10n);
+});
+test('new invalid rules fail clearly',()=>{for(const c of [{maxOccurrences:13},{minRepeatGap:-1},{minDistinct:3,maxDistinct:2},{letterRules:[{letter:'AB'}]},{letterRules:[{letter:'A',min:3,max:2}]},{letterMasks:['A*']},{allowedConsonantPairs:['ABC']}])assert.throws(()=>normalize(c));});

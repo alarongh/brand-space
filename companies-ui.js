@@ -1,4 +1,5 @@
-import {analyzeCompanies} from './company-analysis.js?v=5';
+import {mountVariants} from './variants-ui.js?v=6';
+import {analyzeCompanies} from './company-analysis.js?v=6';
 
 const element=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
 const pct=n=>(100*n).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
@@ -37,6 +38,7 @@ export async function mountCompanies(root,onTransfer){
     const more=element('details',undefined,'company-more');more.append(element('summary','Начала, окончания и повторяющиеся сочетания'));
     const tables=element('div',undefined,'company-feature-tables');more.append(tables);root.append(more);
     const status=element('p',undefined,'company-note');status.id='company-transfer-status';status.setAttribute('role','status');root.append(status);
+    const variantRoot=element('section');root.insertBefore(variantRoot,facts);const updateVariants=mountVariants(variantRoot,data.companies,onTransfer);
     let model=null;const selected=new Set();
     const updateSelection=()=>{selection.textContent='Выбрано масок: '+selected.size;apply.disabled=!selected.size;};
     const transfer=(kind,values)=>{onTransfer({kind,values,vowels:vowelModel.value,adjustRange:replace.checked});status.textContent='Перенесено в настройки поиска. Нажмите «Применить правила», чтобы пересчитать варианты.';};
@@ -52,7 +54,7 @@ export async function mountCompanies(root,onTransfer){
     }
     function render(){
       const options={mode:mode.value,typography:typography.value,vowels:vowelModel.value,length:length.value?Number(length.value):null};
-      model=analyzeCompanies(data.companies,options);facts.replaceChildren();
+      model=analyzeCompanies(data.companies,options);updateVariants(options,model);facts.replaceChildren();
       for(const [label,value] of [['Компаний в расчёте',model.denominator+' / 1000'],['Различных масок',model.tables.masks.length],['С 3+ согласными подряд',(model.flags.three_consonants||0)+' · '+(model.denominator?pct((model.flags.three_consonants||0)/model.denominator):'—')]]){const div=element('div');div.append(element('span',label),element('strong',value));facts.append(div);}
       description.textContent=`C — согласная, V — гласная (${vowelModel.value}). Доля считается от ${model.denominator} подходящих компаний. ${mode.value==='tokens'?'Каждая компания учитывается один раз на маску; доли разных строк могут пересекаться.':'Одна форма на компанию; строки масок не пересекаются.'}`;
       if(!model.denominator)description.textContent='В этой группе нет подходящих названий. Измените длину или параметры анализа.';

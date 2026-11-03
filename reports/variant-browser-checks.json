@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-03",
+  "environment": "Local app served over HTTP, in-app browser",
+  "cohort": {"mode":"single","typography":"mixed","vowels":"AEIOU","family":"CVCCVC","companies":19},
+  "joint_anchors": {"positions":2,"min_companies":2,"templates":35,"top_template":"?A??A?","support":4},
+  "search": {
+    "patterns":["CVCCVC"],"letterMasks":["?A??A?"],"maxOccurrences":2,"minRepeatGap":2,
+    "allowedConsonantPairs":["BL","BT","CC","FR","LM","NK","NM","NT","PS","RG","RM","RP","RT","SD","SM","XC","YP"],
+    "browser_total":6400,"independent_python_total":6400,
+    "with_R_exactly_once_browser_total":2318,"with_R_exactly_once_independent_python_total":2318
+  },
+  "settings_survive_reload":true,
+  "csv_download":{"rows":10,"names_equal_first_10_independently_enumerated":true,"new_repeat_columns_verified":true},
+  "statistics_button_fills_repeat_limit":true,
+  "responsive":{"viewport_width":390,"document_scroll_width":380,"builder_width":308.667,"horizontal_page_overflow":false},
+  "console_errors":[],
+  "limits":"Readability is structural and user-selected, never guaranteed. Complex combinations may reach the explicit state limit."
+}
