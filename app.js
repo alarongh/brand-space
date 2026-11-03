@@ -1,5 +1,5 @@
-import {DEFAULTS,normalize,features} from './engine.js?v=6';
-import {restoreSettings} from './settings.js?v=6';
+import {DEFAULTS,normalize,features} from './engine.js?v=7';
+import {restoreSettings} from './settings.js?v=7';
 const $=id=>document.getElementById(id),number=s=>BigInt(s).toLocaleString('ru-RU'),split=s=>s.toUpperCase().split(/[\s,;]+/).filter(Boolean);
 const STORAGE='brand-space-v2';
 let stored=null,legacy=null;try{stored=localStorage.getItem(STORAGE);legacy=localStorage.getItem('brand-space-v1');}catch{}
@@ -7,7 +7,7 @@ const settings=restoreSettings(stored,legacy);
 let favorites=settings.favorites,active=settings.config,page=null,worker=null,serial=0,pending=new Map(),exporting=false,exportCancelled=false;
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify({schema:2,config:active,favorites,legacyConfig:settings.legacyConfig}));}catch{message('Браузер не сохранил настройки. Скачайте копию избранного.',true);}}
 function message(text,error=false){$('status').textContent=text;$('status').className=error?'error':'';}
-function spawn(){if(worker)worker.terminate();for(const {reject} of pending.values())reject(Error('Расчёт остановлен'));pending.clear();worker=new Worker(new URL('./worker.js?v=6',import.meta.url),{type:'module'});worker.onmessage=({data:m})=>{const p=pending.get(m.id);if(!p)return;pending.delete(m.id);if(m.error)p.reject(Error(m.error));else p.resolve(m);};worker.onerror=e=>{message('Ошибка вычислителя: '+e.message,true);for(const {reject} of pending.values())reject(Error(e.message));pending.clear();};}
+function spawn(){if(worker)worker.terminate();for(const {reject} of pending.values())reject(Error('Расчёт остановлен'));pending.clear();worker=new Worker(new URL('./worker.js?v=7',import.meta.url),{type:'module'});worker.onmessage=({data:m})=>{const p=pending.get(m.id);if(!p)return;pending.delete(m.id);if(m.error)p.reject(Error(m.error));else p.resolve(m);};worker.onerror=e=>{message('Ошибка вычислителя: '+e.message,true);for(const {reject} of pending.values())reject(Error(e.message));pending.clear();};}
 function request(type,data={}){return new Promise((resolve,reject)=>{const id=++serial;pending.set(id,{resolve,reject});worker.postMessage({id,type,...data});});}
 let positionSerial=0;
 let letterSerial=0;
@@ -89,7 +89,7 @@ async function exportData(directoryMode){if(exporting)return;let ew,writable=nul
   if(!page)throw Error('Сначала примените правила');const config=structuredClone(active),total=BigInt(page.total),partSize=Number($('split').value);let at=BigInt($('export-start').value.replace(/\s/g,''))-1n;if(at<0n||at>=total)throw Error('Начальная позиция вне выборки');if(!Number.isInteger(partSize)||partSize<1||partSize>1000000)throw Error('Размер части: 1–1 000 000');
   let directory;if(directoryMode){if(!window.showDirectoryPicker)throw Error('Этот браузер не поддерживает запись в папку. Используйте «Скачать часть CSV» и продолжайте с сохранённой позиции.');directory=await window.showDirectoryPicker({mode:'readwrite'});}
   exporting=true;exportCancelled=false;$('export-stop').hidden=false;$('export-directory').disabled=$('export-part').disabled=true;
-  ew=new Worker(new URL('./worker.js?v=6',import.meta.url),{type:'module'});let eid=0;
+  ew=new Worker(new URL('./worker.js?v=7',import.meta.url),{type:'module'});let eid=0;
   const ask=(type,data)=>new Promise((resolve,reject)=>{ew.onmessage=({data:m})=>m.error?reject(Error(m.error)):resolve(m.result);ew.onerror=e=>reject(Error(e.message));ew.postMessage({id:++eid,type,...data});});
   await ask('init',{config,limit:1});
   do {const start=at,end=at+BigInt(partSize)<total?at+BigInt(partSize):total;const filename=`names_${start+1n}-${end}.csv`;let chunks=['\ufeff'+csvHeader];
@@ -121,7 +121,7 @@ $('company-lab').addEventListener('toggle',async()=>{
   if(!$('company-lab').open||companyMounted)return;
   companyMounted=true;
   try{
-    const {mountCompanies}=await import('./companies-ui.js?v=6');
+    const {mountCompanies}=await import('./companies-ui.js?v=7');
     await mountCompanies($('company-analysis'),({kind,values,vowels,adjustRange,patch})=>{
       if(kind==='variant'){const c=normalize({...formConfig(),...patch});setForm(c);markDraft();message('Вариант перенесён в настройки. Нажмите «Применить правила».');return;}
       const field=$(kind);const previous=split(field.value);

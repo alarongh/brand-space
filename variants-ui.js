@@ -1,4 +1,4 @@
-import {namingVariants} from './naming-variants.js?v=6';
+import {namingVariants} from './naming-variants.js?v=7';
 const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
 const percent=n=>(n*100).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
 export function mountVariants(root,companies,onTransfer){
@@ -44,6 +44,6 @@ export function mountVariants(root,companies,onTransfer){
     }
     renderRows();
   }
-  search.oninput=()=>{if(model)renderRows();};for(const input of [family,anchors,support])input.onchange=render;
+  search.oninput=()=>{if(model)renderRows();};for(const input of [family,anchors])input.onchange=render;support.oninput=render;
   return (nextOptions,analysis)=>{options=nextOptions;const previous=family.value;family.replaceChildren();for(const row of analysis.tables.masks){const o=el('option',`${row.value} · ${row.companies} компаний`);o.value=row.value;family.append(o);}if(analysis.tables.masks.some(r=>r.value===previous))family.value=previous;render();};
 }

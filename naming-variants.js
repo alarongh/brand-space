@@ -1,5 +1,5 @@
-import {observations} from './company-analysis.js?v=6';
-import {repetitionFeatures} from './repeat-rules.js?v=6';
+import {observations} from './company-analysis.js?v=7';
+import {repetitionFeatures} from './repeat-rules.js?v=7';
 
 // Every frequency is a document frequency, including joint letter anchors.
 // No independent-position probabilities are multiplied to invent support.

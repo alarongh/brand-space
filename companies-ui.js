@@ -1,5 +1,5 @@
-import {mountVariants} from './variants-ui.js?v=6';
-import {analyzeCompanies} from './company-analysis.js?v=6';
+import {mountVariants} from './variants-ui.js?v=7';
+import {analyzeCompanies} from './company-analysis.js?v=7';
 
 const element=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
 const pct=n=>(100*n).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
