@@ -1,0 +1,2 @@
+# Preserve the frozen CSV byte-for-byte, including newlines inside quoted names.
+data/*.csv -text
