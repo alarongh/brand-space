@@ -33,7 +33,7 @@ export function mountVariants(root,companies,onTransfer){
   plain.onclick=()=>transfer('');
   function renderRows(){body.replaceChildren();const query=search.value.trim().toUpperCase();for(const row of model.variants){if(query&&!row.template.includes(query))continue;const tr=el('tr');tr.append(el('td',row.template,'mono'),el('td',row.companies),el('td',percent(row.share)),el('td',row.examples.map(e=>e.name).join(' · '),'company-examples'));const td=el('td'),button=el('button','В фильтр');button.type='button';button.setAttribute('aria-label','В фильтр '+row.template);button.onclick=()=>transfer(row.template);td.append(button);tr.append(td);body.append(tr);}if(!body.children.length){const tr=el('tr'),td=el('td','Подходящих шаблонов нет. Измените порог, число позиций или поиск.');td.colSpan=5;tr.append(td);body.append(tr);}}
   function render(){
-    const minSupport=Number(support.value);if(!Number.isInteger(minSupport)||minSupport<1){facts.textContent='Минимум компаний должен быть положительным целым.';return;}
+    const minSupport=Number(support.value);if(!Number.isInteger(minSupport)||minSupport<1){facts.textContent='Минимум компаний должен быть положительным целым.';model=null;body.replaceChildren();statistics.replaceChildren();plain.disabled=true;pairNote.textContent='Исправьте порог поддержки, чтобы построить варианты.';return;}
     model=namingVariants(companies,options,family.value,{anchors:Number(anchors.value),minSupport});
     facts.textContent=`Маска ${family.value||'—'}: ${model.denominator} компаний. Буквенных шаблонов с порогом ${minSupport}: ${model.variants.length}. ? — любая буква; это отдельная маска, буквы C и V в ней означают сами буквы.`;
     plain.disabled=!model.denominator;
