@@ -1,4 +1,4 @@
-import {Catalogue} from './engine.js';
+import {Catalogue} from './engine.js?v=3';
 let catalogue=null;
 self.onmessage=({data:m})=>{const started=performance.now();try{
   if(m.type==='init')catalogue=new Catalogue(m.config);

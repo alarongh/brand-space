@@ -1,18 +1,25 @@
-✔ full unfiltered 4–6 universe is exactly 321254128; rejected legacy names remain (3.2644ms)
-✔ legacy configuration independently gives every known per-length count (7.0053ms)
-✔ unfiltered lengths 1–12 preserve integer precision and support last-page seek (1.8341ms)
-✔ exhaustive small universes, overlapping automaton patterns, all hard rules (171.7894ms)
-✔ exact dictionary does not exclude longer words containing its entries (0.4882ms)
-✔ redundant X endings and identical triples do not double count exclusions (8.2956ms)
-✔ seek absent and excluded words returns exact insertion position (0.3178ms)
-✔ stable raw IDs agree with independent base-26 encoding (0.1695ms)
-✔ annotations never discard names; Y and warning endings remain (0.3889ms)
-✔ invalid configs and page positions fail clearly (0.5445ms)
-ℹ tests 10
+✔ full unfiltered 4–6 universe is exactly 321254128; rejected legacy names remain (3.3022ms)
+✔ legacy configuration independently gives every known per-length count (9.0755ms)
+✔ unfiltered lengths 1–12 preserve integer precision and support last-page seek (2.5433ms)
+✔ exhaustive small universes, overlapping automaton patterns, all hard rules (206.1176ms)
+✔ exact dictionary does not exclude longer words containing its entries (0.5543ms)
+✔ redundant X endings and identical triples do not double count exclusions (52.0816ms)
+✔ seek absent and excluded words returns exact insertion position (0.3562ms)
+✔ stable raw IDs agree with independent base-26 encoding (0.2093ms)
+✔ annotations never discard names; Y and warning endings remain (0.4962ms)
+✔ invalid configs and page positions fail clearly (0.4284ms)
+✔ default catalogue spans 3–12 with no preset restrictions or suffix annotations (0.9777ms)
+✔ custom required groups, prefix/suffix alternatives and position rules exhaustively match brute force (88.3273ms)
+✔ invalid positional and required rules fail without partial results (0.5451ms)
+✔ migration keeps favorites and backs up old rules without reapplying them (3.6378ms)
+✔ new custom settings preserve disjoint lengths and custom constraints (0.2978ms)
+✔ invalid saved settings fall back to unrestricted catalogue and keep favorites (0.1636ms)
+✔ malformed storage does not prevent startup (1.0986ms)
+ℹ tests 17
 ℹ suites 0
-ℹ pass 10
+ℹ pass 17
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 262.6627
+ℹ duration_ms 440.3288

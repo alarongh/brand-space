@@ -1,25 +1,46 @@
 {
   "passed": true,
   "checks": [
-    "initial_full_catalogue",
-    "oil_profile_exact_count",
-    "combined_search_894",
-    "favorites_persist",
-    "notes_persist_after_reload",
-    "full_csv_three_parts"
+    "visible_lengths_1_to_12",
+    "default_lengths_3_to_12",
+    "migration_drops_old_filters",
+    "generic_catalogue_no_presets",
+    "required_any_group",
+    "custom_suffix_alternatives",
+    "custom_first_position",
+    "custom_annotations_do_not_remove",
+    "full_csv_export"
+  ],
+  "fixture": {
+    "allowed": "ABC",
+    "lengths": [
+      3
+    ],
+    "required": [
+      "AB",
+      "AC"
+    ],
+    "requiredMode": "any",
+    "suffixes": [
+      "A"
+    ],
+    "positionRules": [
+      {
+        "position": 1,
+        "allowed": "A",
+        "blocked": ""
+      }
+    ],
+    "warningSuffixes": [
+      "CA"
+    ]
+  },
+  "expected_names": [
+    "ABA",
+    "ACA"
   ],
   "csv_names": [
-    "A",
-    "B",
-    "AA",
-    "AB",
-    "BA",
-    "BB"
-  ],
-  "oil_count": 23847260,
-  "combined_query_count": 894,
-  "combined_query_worker_ms": 14,
-  "directory_streaming": "implemented; native folder-picker path not exercised by this browser test",
-  "mobile": "checked separately",
-  "dictionary_upload": "engine exact dictionary tested; native file picker not exercised"
+    "ABA",
+    "ACA"
+  ]
 }
