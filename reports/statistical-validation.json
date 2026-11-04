@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-05",
+  "source": "Frozen CompaniesMarketCap top-1000 snapshot 2026-11-03",
+  "split": {
+    "method": "company rank modulo 5: 0–2 fit, 3 validation, 4 test; shared evaluation forms removed from fit",
+    "fit": 188,
+    "validation": 51,
+    "test": 79
+  },
+  "smoothingValidation": [
+    {
+      "beta": 1,
+      "bitsPerCharacter": 4.698580237796083,
+      "unigramBitsPerCharacter": 4.212132024734367,
+      "uniformBitsPerCharacter": 4.754887502163468,
+      "weightedCharacters": 393
+    },
+    {
+      "beta": 2,
+      "bitsPerCharacter": 4.389211663315933,
+      "unigramBitsPerCharacter": 4.212132024734367,
+      "uniformBitsPerCharacter": 4.754887502163468,
+      "weightedCharacters": 393
+    },
+    {
+      "beta": 5,
+      "bitsPerCharacter": 4.082880079159878,
+      "unigramBitsPerCharacter": 4.212132024734367,
+      "uniformBitsPerCharacter": 4.754887502163468,
+      "weightedCharacters": 393
+    },
+    {
+      "beta": 10,
+      "bitsPerCharacter": 3.938396311469236,
+      "unigramBitsPerCharacter": 4.212132024734367,
+      "uniformBitsPerCharacter": 4.754887502163468,
+      "weightedCharacters": 393
+    },
+    {
+      "beta": 20,
+      "bitsPerCharacter": 3.8661074423035995,
+      "unigramBitsPerCharacter": 4.212132024734367,
+      "uniformBitsPerCharacter": 4.754887502163468,
+      "weightedCharacters": 393
+    },
+    {
+      "beta": 50,
+      "bitsPerCharacter": 3.8610731131911575,
+      "unigramBitsPerCharacter": 4.212132024734367,
+      "uniformBitsPerCharacter": 4.754887502163468,
+      "weightedCharacters": 393
+    },
+    {
+      "beta": 100,
+      "bitsPerCharacter": 3.9054427430664638,
+      "unigramBitsPerCharacter": 4.212132024734367,
+      "uniformBitsPerCharacter": 4.754887502163468,
+      "weightedCharacters": 393
+    }
+  ],
+  "bestBetaOnValidation": 50,
+  "productionBeta": 50,
+  "heldout": {
+    "bitsPerCharacter": 3.899238591378084,
+    "unigramBitsPerCharacter": 4.247589304465783,
+    "uniformBitsPerCharacter": 4.754887502163468,
+    "weightedCharacters": 631
+  },
+  "productionFitForms": 318,
+  "search": {
+    "lengths": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "results": 500,
+    "expanded": 5397,
+    "frontier": 134431,
+    "halted": false,
+    "elapsedMs": 5504
+  },
+  "diversity": {
+    "strength": 0.65,
+    "pureModel": {
+      "rows": 40,
+      "lengths": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "structures": 9,
+      "meanPairSimilarity": 0.3772633751576064,
+      "nearPairShare": 0.06538461538461539,
+      "largestPrefix2Family": 28,
+      "largestSuffix2Family": 16,
+      "sourceExact": 0
+    },
+    "reranked": {
+      "rows": 40,
+      "lengths": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "structures": 16,
+      "meanPairSimilarity": 0.18016060292983352,
+      "nearPairShare": 0,
+      "largestPrefix2Family": 6,
+      "largestSuffix2Family": 5,
+      "sourceExact": 0
+    }
+  },
+  "limits": [
+    "Language likelihood is not marketing success or legal availability.",
+    "The dataset selects surviving public companies by market cap, not successful names.",
+    "Diversity is evaluated inside the computed exact model-ranked pool.",
+    "There is no verified Russian pronunciation corpus in this model."
+  ]
+}

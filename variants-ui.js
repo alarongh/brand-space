@@ -1,4 +1,4 @@
-import {namingVariants} from './naming-variants.js?v=7';
+import {namingVariants} from './naming-variants.js?v=11';
 const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
 const percent=n=>(n*100).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
 export function mountVariants(root,companies,onTransfer){

@@ -1,5 +1,5 @@
-import {normalizeRepeats,RepeatTracker,repetitionFeatures} from './repeat-rules.js?v=7';
-import {LiteralMasks} from './literal-masks.js?v=7';
+import {normalizeRepeats,RepeatTracker,repetitionFeatures} from './repeat-rules.js?v=11';
+import {LiteralMasks} from './literal-masks.js?v=11';
 /* Exact finite-state counting and rank/select over an implicit A–Z catalogue. */
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 export const DEFAULTS = {lengths:[3,4,5,6,7,8,9,10,11,12], allowed:ALPHABET, vowels:'AEIOU', blocked:'', maxC:null, maxV:null, maxSame:null, prefix:'', suffix:'', contains:'', excluded:[], bannedSuffixes:[], stops:[], minV:0,maxVowels:12,pattern:'', patterns:[], noInnerY:false,required:[],requiredMode:'all',prefixes:[],suffixes:[],bannedPrefixes:[],positionRules:[],warningSuffixes:[],maxOccurrences:null,minRepeatGap:null,maxRepeatGap:null,minDistinct:0,maxDistinct:null,letterRules:[],letterMasks:[],allowedConsonantPairs:[],allowedVowelPairs:[]};

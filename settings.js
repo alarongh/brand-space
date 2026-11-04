@@ -1,4 +1,4 @@
-import {DEFAULTS,normalize} from './engine.js?v=7';
+import {DEFAULTS,normalize} from './engine.js?v=11';
 
 // Keep old settings as a downloadable backup, but do not reapply retired presets.
 export function restoreSettings(currentText,legacyText) {

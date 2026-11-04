@@ -1,0 +1,25 @@
+import fs from 'node:fs';
+import {NamingModel,trainingRows,diversify,similarity,SMOOTHING_BETA} from '../statistical-model.js';
+import {StatisticalSearch} from '../statistical-search.js';
+const data=JSON.parse(fs.readFileSync(new URL('../data/company-patterns-2026-11-03.json',import.meta.url)));
+const options={mode:'single',typography:'mixed'},all=trainingRows(data.companies,options);
+// Company-level split; duplicate normalized forms in the evaluation group are
+// removed from fitting even if another company used the same form.
+const train=all.filter(r=>r.rank%5<3),validation=all.filter(r=>r.rank%5===3),test=all.filter(r=>r.rank%5===4);
+const removeShared=(fit,evaluation)=>{const held=new Set(evaluation.map(r=>r.value));return fit.filter(r=>!held.has(r.value));};
+const evaluate=(model,rows)=>{let lm=0,uni=0,den=0;for(const r of rows){const w=r.value,weight=r.weight??1;const chain=(m,s)=>{let ctx='^^',sum=0;for(const ch of s+'$'){sum-=Math.log2(m.probability(ch,ctx));ctx=(ctx+ch).slice(-2);}return sum;};lm+=weight*(chain(model.forward,w)+chain(model.reverse,[...w].reverse().join('')))/2;for(const ch of w+'$'){const i='ABCDEFGHIJKLMNOPQRSTUVWXYZ$'.indexOf(ch);uni+=weight*-Math.log2((model.forward.uni[i]+0.2)/(model.forward.total+27*0.2));}den+=weight*(w.length+1);}return {bitsPerCharacter:lm/den,unigramBitsPerCharacter:uni/den,uniformBitsPerCharacter:Math.log2(27),weightedCharacters:den};};
+const candidates=[1,2,5,10,20,50,100].map(beta=>{const m=new NamingModel(removeShared(train,validation),{beta});return {beta,...evaluate(m,validation)};});
+const selected=[...candidates].sort((a,b)=>a.bitsPerCharacter-b.bitsPerCharacter||a.beta-b.beta)[0].beta;
+const heldoutModel=new NamingModel(removeShared([...train,...validation],test),{beta:SMOOTHING_BETA}),heldout=evaluate(heldoutModel,test);
+const identityWords=data.companies.flatMap(c=>[c.form,...c.words.map(r=>r.value)]).filter(w=>w&&/^[A-Z]{1,12}$/.test(w));
+const started=performance.now(),model=new NamingModel(all,{identityWords}),search=new StatisticalSearch(model,{lengths:[4,5,6,7,8,9]});
+for(let i=0;i<100;i++){const s=search.advance(5000,500);if(s.rows.length>=500||s.exhausted||s.halted)break;}
+const raw=search.results.slice(0,40),mixed=diversify(search.results,40,0.65);
+function metrics(rows){let total=0,pairs=0,nearPairs=0;for(let i=0;i<rows.length;i++)for(let j=0;j<i;j++){const s=similarity(rows[i].name,rows[j].name);total+=s;pairs++;if(s>0.7)nearPairs++;}const count=(fn)=>{const map=new Map();for(const r of rows){const key=fn(r);map.set(key,(map.get(key)||0)+1);}return map;};return {rows:rows.length,lengths:[...count(r=>r.name.length).keys()].sort(),structures:count(r=>r.mask).size,meanPairSimilarity:total/Math.max(1,pairs),nearPairShare:nearPairs/Math.max(1,pairs),largestPrefix2Family:Math.max(0,...count(r=>r.name.slice(0,2)).values()),largestSuffix2Family:Math.max(0,...count(r=>r.name.slice(-2)).values()),sourceExact:rows.filter(r=>r.sourceExact).length};}
+if(selected!==SMOOTHING_BETA)throw Error('Retune the production smoothing parameter against validation data');
+if(heldout.bitsPerCharacter>=heldout.unigramBitsPerCharacter)throw Error('Held-out language model no longer improves on unigram baseline');
+if(search.results.length!==500||new Set(search.results.map(r=>r.name)).size!==500)throw Error('Default search did not compute 500 distinct ranked candidates');
+if(metrics(mixed).meanPairSimilarity>=metrics(raw).meanPairSimilarity||metrics(mixed).largestPrefix2Family>=metrics(raw).largestPrefix2Family)throw Error('Diversity did not reduce repetition in the frozen diagnostic run');
+const report={date:'2026-11-05',source:'Frozen CompaniesMarketCap top-1000 snapshot 2026-11-03',split:{method:'company rank modulo 5: 0–2 fit, 3 validation, 4 test; shared evaluation forms removed from fit',fit:train.length,validation:validation.length,test:test.length},smoothingValidation:candidates,bestBetaOnValidation:selected,productionBeta:SMOOTHING_BETA,heldout,productionFitForms:all.length,search:{lengths:[4,5,6,7,8,9],results:search.results.length,expanded:search.expanded,frontier:search.heap.items.length,halted:search.halted,elapsedMs:Math.round(performance.now()-started)},diversity:{strength:0.65,pureModel:metrics(raw),reranked:metrics(mixed)},limits:['Language likelihood is not marketing success or legal availability.','The dataset selects surviving public companies by market cap, not successful names.','Diversity is evaluated inside the computed exact model-ranked pool.','There is no verified Russian pronunciation corpus in this model.']};
+fs.writeFileSync(new URL('../reports/statistical-validation.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
+const columns=['name','score','structure','length','nearest_source_0_2','distance'];const csv=[columns,...mixed.map(r=>[r.name,r.score,r.mask,r.length,r.nearest??'',r.editDistance??''])].map(row=>row.map(x=>'"'+String(x).replaceAll('"','""')+'"').join(',')).join('\r\n');fs.writeFileSync(new URL('../reports/statistical-example.csv',import.meta.url),'\ufeff'+csv+'\r\n');console.log(JSON.stringify(report,null,2));

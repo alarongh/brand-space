@@ -11,5 +11,6 @@ jobs:
         with:
           node-version: '24'
       - run: node --test tests/*.test.js
+      - run: node research/validate-ranking.js
 
       - run: python -m unittest discover -s research -p 'test_*.py'
